@@ -5,13 +5,18 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "order_items", uniqueConstraints = {
         @UniqueConstraint(name = "uk_orderitem_order_fooditem", columnNames = { "order_id", "food_item_id" })
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = { "order" })
+@EqualsAndHashCode(exclude = { "order" })
 public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +25,7 @@ public class OrderItem {
     @NotNull(message = "Order is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false, foreignKey = @ForeignKey(name = "fk_orderitem_order"))
+    @JsonBackReference
     private Order order;
 
     @NotNull(message = "Food item is required")
