@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 
 @Data
 public class AddToCartRequestDTO {
-    @NotNull(message = "Restaurant ID is required")
     private Long restaurantId;
 
     @NotNull(message = "Items are required")

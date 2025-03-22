@@ -1,4 +1,4 @@
- package com.app.foodcart.DTOs;
+package com.app.foodcart.DTOs;
 
 import lombok.Data;
 import com.app.foodcart.entities.CartItem;
@@ -12,6 +12,8 @@ public class CartItemDTO {
     private double foodItemPrice;
     private int quantity;
     private double subtotal;
+    private Long restaurantId;
+    private String restaurantName;
 
     public CartItemDTO(CartItem cartItem) {
         this.id = cartItem.getId();
@@ -24,6 +26,12 @@ public class CartItemDTO {
             this.foodItemId = cartItem.getFoodItem().getId();
             this.foodItemName = cartItem.getFoodItem().getName();
             this.foodItemPrice = cartItem.getFoodItem().getPrice().doubleValue();
+
+            // Add restaurant information
+            if (cartItem.getFoodItem().getRestaurant() != null) {
+                this.restaurantId = cartItem.getFoodItem().getRestaurant().getId();
+                this.restaurantName = cartItem.getFoodItem().getRestaurant().getName();
+            }
         }
 
         this.quantity = cartItem.getQuantity();

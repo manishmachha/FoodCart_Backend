@@ -12,6 +12,7 @@ import com.app.foodcart.DTOs.ApiResponse;
 import com.app.foodcart.DTOs.CartDTO;
 import com.app.foodcart.DTOs.CartItemDTO;
 import com.app.foodcart.DTOs.requests.AddToCartRequestDTO;
+import com.app.foodcart.DTOs.requests.UpdateCartItemRequestDTO;
 import com.app.foodcart.entities.Cart;
 import com.app.foodcart.entities.CartItem;
 import com.app.foodcart.entities.User;
@@ -66,19 +67,19 @@ public class CartController {
     /**
      * Update cart item quantity
      */
-    @PutMapping("/items/{itemId}")
+    @PutMapping("/items/update")
     public ResponseEntity<ApiResponse<CartItemDTO>> updateCartItemQuantity(
-            @PathVariable Long itemId,
-            @RequestParam int quantity) {
+            @Valid @RequestBody UpdateCartItemRequestDTO request) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = userDetailsService.getUserFromAuthentication(auth);
 
-        CartItem updatedItem = cartService.updateCartItemQuantity(user.getId(), itemId, quantity);
+        CartItem updatedItem = cartService.updateCartItemQuantity(user.getId(), request.getItemId(),
+                request.getQuantity());
         CartItemDTO itemDTO = new CartItemDTO(updatedItem);
 
         ApiResponse<CartItemDTO> response = ApiResponse.success(
-                String.format("Cart item %d quantity updated to %d", itemId, quantity),
+                String.format("Cart item %d quantity updated to %d", request.getItemId(), request.getQuantity()),
                 itemDTO);
         return ResponseEntity.ok(response);
     }

@@ -5,6 +5,9 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import java.util.List;
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "carts")
@@ -21,10 +24,6 @@ public class Cart {
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_cart_user"))
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id", foreignKey = @ForeignKey(name = "fk_cart_restaurant"))
-    private Restaurant restaurant;
-
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<CartItem> cartItems;
 
@@ -40,6 +39,17 @@ public class Cart {
         return cartItems.stream()
                 .mapToDouble(item -> item.getFoodItem().getPrice().doubleValue() * item.getQuantity())
                 .sum();
+    }
+
+    // Method to get items grouped by restaurant
+    @Transient
+    public Map<Restaurant, List<CartItem>> getItemsByRestaurant() {
+        if (cartItems == null || cartItems.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        return cartItems.stream()
+                .collect(Collectors.groupingBy(item -> item.getFoodItem().getRestaurant()));
     }
 
     // Method to clear cart items

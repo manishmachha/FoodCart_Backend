@@ -21,6 +21,7 @@ import com.app.foodcart.repositories.RestaurantRepository;
 import com.app.foodcart.repositories.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -64,20 +65,17 @@ public class CartService {
     /**
      * Add items to cart
      */
+    @Transactional
     public Cart addToCart(Long userId, AddToCartRequestDTO request) {
         Cart cart = getOrCreateCart(userId);
 
-        // If cart is already associated with a different restaurant, clear it
+        // Validate restaurant exists (but don't clear cart for different restaurants)
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
                     .orElseThrow(() -> new ResourceNotFoundException("Restaurant", "id", request.getRestaurantId()));
 
-            if (cart.getRestaurant() != null && !cart.getRestaurant().getId().equals(restaurant.getId())) {
-                clearCart(userId);
-                cart = getOrCreateCart(userId);
-            }
-
-            cart.setRestaurant(restaurant);
+            // We no longer clear the cart when switching restaurants
+            // No need to set cart.restaurant as it can have items from multiple restaurants
         }
 
         // Add or update items
@@ -118,6 +116,7 @@ public class CartService {
         }
 
         cart.setLastUpdated(LocalDateTime.now());
+        cartRepository.flush();
         return cartRepository.save(cart);
     }
 
@@ -172,18 +171,26 @@ public class CartService {
     /**
      * Clear cart
      */
+    @Transactional
     public void clearCart(Long userId) {
         Optional<Cart> cartOpt = cartRepository.findByUserId(userId);
 
         if (cartOpt.isPresent()) {
             Cart cart = cartOpt.get();
-            // Delete all cart items
-            cartItemRepository.deleteByCartId(cart.getId());
+
+            // Get cart items from repository directly to ensure we have the latest state
+            List<CartItem> items = cartItemRepository.findByCartId(cart.getId());
+
+            // Delete each item individually to avoid persistence issues
+            for (CartItem item : items) {
+                cartItemRepository.delete(item);
+            }
+            cartItemRepository.flush();
 
             // Reset cart
-            cart.setRestaurant(null);
             cart.setLastUpdated(LocalDateTime.now());
             cartRepository.save(cart);
+            cartRepository.flush();
         }
     }
 }

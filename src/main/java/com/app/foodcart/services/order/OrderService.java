@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.app.foodcart.entities.Order;
+import com.app.foodcart.entities.enums.OrderStatus;
 import com.app.foodcart.repositories.OrderRepository;
 
 @Service
@@ -29,6 +30,7 @@ public class OrderService {
     }
 
     public Order placeOrder(Order order) {
+        order.setStatus(OrderStatus.CONFIRMED);
         return orderRepository.save(order);
     }
 
