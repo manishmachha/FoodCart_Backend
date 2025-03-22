@@ -127,6 +127,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
+    // Handle Invalid Food Item Exception
+    @ExceptionHandler(InvalidFoodItemException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFoodItemException(InvalidFoodItemException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                "Invalid Food Item");
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     // Handle Constraint Violation Exception (validation errors)
     @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolationException(

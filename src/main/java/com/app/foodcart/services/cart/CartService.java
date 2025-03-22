@@ -11,6 +11,9 @@ import com.app.foodcart.entities.CartItem;
 import com.app.foodcart.entities.FoodItem;
 import com.app.foodcart.entities.Restaurant;
 import com.app.foodcart.entities.User;
+import com.app.foodcart.exceptions.BadRequestException;
+import com.app.foodcart.exceptions.InvalidFoodItemException;
+import com.app.foodcart.exceptions.ResourceNotFoundException;
 import com.app.foodcart.repositories.CartItemRepository;
 import com.app.foodcart.repositories.CartRepository;
 import com.app.foodcart.repositories.FoodItemRepository;
@@ -44,7 +47,7 @@ public class CartService {
      */
     public Cart getOrCreateCart(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         Optional<Cart> existingCart = cartRepository.findByUser(user);
         if (existingCart.isPresent()) {
@@ -67,7 +70,7 @@ public class CartService {
         // If cart is already associated with a different restaurant, clear it
         if (request.getRestaurantId() != null) {
             Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
-                    .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Restaurant", "id", request.getRestaurantId()));
 
             if (cart.getRestaurant() != null && !cart.getRestaurant().getId().equals(restaurant.getId())) {
                 clearCart(userId);
@@ -80,8 +83,20 @@ public class CartService {
         // Add or update items
         if (request.getItems() != null && !request.getItems().isEmpty()) {
             for (CartItemRequestDTO itemRequest : request.getItems()) {
+                // Explicitly check for null foodItemId before using it
+                if (itemRequest.getFoodItemId() == null) {
+                    throw new BadRequestException("Food item ID is required and cannot be null");
+                }
+
                 FoodItem foodItem = foodItemRepository.findById(itemRequest.getFoodItemId())
-                        .orElseThrow(() -> new RuntimeException("Food item not found"));
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("Food item", "id", itemRequest.getFoodItemId()));
+
+                // Validate that the food item belongs to the specified restaurant
+                if (request.getRestaurantId() != null &&
+                        !foodItem.getRestaurant().getId().equals(request.getRestaurantId())) {
+                    throw new InvalidFoodItemException(foodItem.getName(), request.getRestaurantId());
+                }
 
                 // Check if item already exists in cart
                 Optional<CartItem> existingItem = cartItemRepository.findByCartAndFoodItem(cart, foodItem);
@@ -111,7 +126,7 @@ public class CartService {
      */
     public Cart getCart(Long userId) {
         return cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart", "userId", userId));
     }
 
     /**
@@ -121,11 +136,11 @@ public class CartService {
         Cart cart = getCart(userId);
 
         CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item", "id", cartItemId));
 
         // Ensure the cart item belongs to the user's cart
         if (!cartItem.getCart().getId().equals(cart.getId())) {
-            throw new RuntimeException("Cart item does not belong to user's cart");
+            throw new BadRequestException("Cart item does not belong to user's cart");
         }
 
         cartItem.setQuantity(quantity);
@@ -142,11 +157,11 @@ public class CartService {
         Cart cart = getCart(userId);
 
         CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Cart item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item", "id", cartItemId));
 
         // Ensure the cart item belongs to the user's cart
         if (!cartItem.getCart().getId().equals(cart.getId())) {
-            throw new RuntimeException("Cart item does not belong to user's cart");
+            throw new BadRequestException("Cart item does not belong to user's cart");
         }
 
         cartItemRepository.delete(cartItem);
