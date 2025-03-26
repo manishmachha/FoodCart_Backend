@@ -34,9 +34,9 @@ public class SecurityConfig {
         http.csrf().disable().authorizeHttpRequests()
                 .requestMatchers("/api/users/create", "/api/orders/**", "api/auth/**",
                         "/api/restaurants/**", "/api/reviews/**", "/api/carts/**", "/api/payments/**",
-                        "/api/foods/**")
+                        "/api/foods/**","/api/users/**")
                 .permitAll()
-                .requestMatchers("/api/users/**").hasRole("ADMIN")
+                // .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .requestMatchers("/api/foods/**",
                         "/api/restaurants/**")
                 .hasAnyRole("USER", "ADMIN")

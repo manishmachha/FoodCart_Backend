@@ -49,4 +49,8 @@ public class User {
 
     @Column(nullable = false)
     private LocalDateTime createdTime;
+
+    @NotNull(message = "Active status is required")
+    @Column(nullable = false)
+    private Boolean isActive;
 }

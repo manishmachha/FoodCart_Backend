@@ -1,12 +1,14 @@
 package com.app.foodcart.DTOs.requests;
 
 import lombok.Data;
+
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 import jakarta.validation.constraints.NotNull;
 
 @Data
-public class FoodItemRequestDTO {
+public class FoodItemRequestDTO implements Serializable{
     private String name;
     @NotNull(message = "Price is required")
     private BigDecimal price;

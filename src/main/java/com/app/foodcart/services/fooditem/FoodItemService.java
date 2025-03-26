@@ -1,5 +1,6 @@
 package com.app.foodcart.services.fooditem;
 
+import java.util.Base64;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,8 @@ public class FoodItemService {
         FoodItem foodItemEntity = new FoodItem();
         foodItemEntity.setName(foodItem.getName());
         foodItemEntity.setPrice(foodItem.getPrice());
-        foodItemEntity.setImage(foodItem.getImage().getBytes());
+        byte[] imageBytes = Base64.getDecoder().decode(foodItem.getImage());
+        foodItemEntity.setImage(imageBytes);
         foodItemEntity.setActive(foodItem.isActive());
         foodItemEntity.setRestaurant(restaurant);
         foodItemEntity.setActive(true);
@@ -84,7 +86,8 @@ public class FoodItemService {
 
         // Update image if provided
         if (updatedFoodItem.getImage() != null) {
-            existingFoodItem.setImage(updatedFoodItem.getImage().getBytes());
+            byte[] imageBytes = Base64.getDecoder().decode(updatedFoodItem.getImage());
+            existingFoodItem.setImage(imageBytes);
         }
 
         return new FoodItemDTO(foodItemRepository.save(existingFoodItem));

@@ -37,11 +37,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private BlackListService blacklistService;
 
     private static final Set<String> EXCLUDED_PATHS = Set.of(
-            "/api/users/create",
-            "/api/auth/**"
-    // "/api/foods/**",
-    // "/api/restaurants/**"
-    );
+            "/api/users/**",
+            "/api/auth/**",
+            "/api/foods/**",
+            "/api/restaurants/**");
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

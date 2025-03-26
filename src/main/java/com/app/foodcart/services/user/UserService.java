@@ -3,14 +3,15 @@ package com.app.foodcart.services.user;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.scheduling.annotation.Async;
-
 import com.app.foodcart.entities.User;
 import com.app.foodcart.exceptions.BadRequestException;
 import com.app.foodcart.exceptions.DuplicateResourceException;
 import com.app.foodcart.exceptions.ResourceNotFoundException;
 import com.app.foodcart.repositories.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.time.LocalDateTime;
 
@@ -42,6 +43,7 @@ public class UserService {
 
         user.setCreatedTime(LocalDateTime.now());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setIsActive(true);
         return CompletableFuture.completedFuture(userRepository.save(user));
     }
 
@@ -99,6 +101,14 @@ public class UserService {
 
             if (user.getPhoneNumber() != null) {
                 existingUser.setPhoneNumber(user.getPhoneNumber());
+            }
+
+            if (user.getRole() != null) {
+                existingUser.setRole(user.getRole());
+            }
+            
+            if (user.getIsActive() != null) { // ✅ Check for null
+                existingUser.setIsActive(user.getIsActive());
             }
 
             return userRepository.save(existingUser);

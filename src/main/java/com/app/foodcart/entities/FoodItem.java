@@ -3,6 +3,8 @@ package com.app.foodcart.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity
@@ -12,7 +14,7 @@ import java.math.BigDecimal;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FoodItem {
+public class FoodItem implements Serializable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

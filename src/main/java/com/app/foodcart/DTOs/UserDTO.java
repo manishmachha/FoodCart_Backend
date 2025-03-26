@@ -11,6 +11,7 @@ public class UserDTO {
     private String role;
     private String createdTime;
     private String phoneNumber;
+    private Boolean isActive;
 
     public UserDTO(User user) {
         this.id = user.getId();
@@ -19,5 +20,6 @@ public class UserDTO {
         this.role = user.getRole();
         this.createdTime = user.getCreatedTime().toString();
         this.phoneNumber = user.getPhoneNumber();
+        this.isActive = user.getIsActive();
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import com.app.foodcart.DTOs.ApiResponse;
 import com.app.foodcart.DTOs.UserDTO;
 import com.app.foodcart.DTOs.requests.UserRequestDTO;
+import com.app.foodcart.DTOs.requests.UserUpdateRequestDTO;
 import com.app.foodcart.entities.User;
 import com.app.foodcart.services.user.UserService;
 
@@ -21,6 +22,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/users")
 @Validated
+@CrossOrigin("*")
 public class UserController {
         @Autowired
         private UserService userService;
@@ -67,13 +69,15 @@ public class UserController {
         @PutMapping("/{id}")
         public CompletableFuture<ResponseEntity<ApiResponse<UserDTO>>> updateUser(
                         @PathVariable Long id,
-                        @Valid @RequestBody UserRequestDTO userRequestDTO) {
+                        @Valid @RequestBody UserUpdateRequestDTO userUpdateRequestDTO) {
 
                 User user = new User();
-                user.setName(userRequestDTO.getName());
-                user.setEmail(userRequestDTO.getEmail());
-                user.setPassword(userRequestDTO.getPassword());
-                user.setPhoneNumber(userRequestDTO.getPhoneNumber());
+                user.setName(userUpdateRequestDTO.getName());
+                user.setEmail(userUpdateRequestDTO.getEmail());
+                user.setPassword(userUpdateRequestDTO.getPassword());
+                user.setPhoneNumber(userUpdateRequestDTO.getPhoneNumber());
+                user.setRole(userUpdateRequestDTO.getRole());
+                user.setIsActive(userUpdateRequestDTO.getIsActive());
 
                 return userService.updateUserAsync(id, user)
                                 .thenApply(updatedUser -> {
