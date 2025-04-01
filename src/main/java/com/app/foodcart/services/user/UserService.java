@@ -4,14 +4,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.scheduling.annotation.Async;
 import com.app.foodcart.entities.User;
-import com.app.foodcart.exceptions.BadRequestException;
 import com.app.foodcart.exceptions.DuplicateResourceException;
 import com.app.foodcart.exceptions.ResourceNotFoundException;
 import com.app.foodcart.repositories.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.time.LocalDateTime;
 
@@ -45,26 +41,6 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setIsActive(true);
         return CompletableFuture.completedFuture(userRepository.save(user));
-    }
-
-    // Keeping synchronous method for backward compatibility
-    public User createUser(User user) {
-        // Check if user with same email already exists
-        User existingUser = userRepository.findByEmail(user.getEmail());
-        if (existingUser != null) {
-            throw new DuplicateResourceException("User", "email", user.getEmail());
-        }
-
-        // Check if user with same phone number already exists
-        if (user.getPhoneNumber() != null) {
-            userRepository.findByPhoneNumber(user.getPhoneNumber()).ifPresent(u -> {
-                throw new DuplicateResourceException("User", "phone number", user.getPhoneNumber());
-            });
-        }
-
-        user.setCreatedTime(LocalDateTime.now());
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
     }
 
     @Async("taskExecutor")
@@ -106,7 +82,7 @@ public class UserService {
             if (user.getRole() != null) {
                 existingUser.setRole(user.getRole());
             }
-            
+
             if (user.getIsActive() != null) { // ✅ Check for null
                 existingUser.setIsActive(user.getIsActive());
             }
@@ -115,18 +91,24 @@ public class UserService {
         });
     }
 
-    // Keeping synchronous method for backward compatibility
-    public User updateUser(Long id, User user) {
-        try {
-            return updateUserAsync(id, user).get();
-        } catch (Exception e) {
-            if (e.getCause() instanceof ResourceNotFoundException) {
-                throw (ResourceNotFoundException) e.getCause();
-            } else if (e.getCause() instanceof DuplicateResourceException) {
-                throw (DuplicateResourceException) e.getCause();
-            }
-            throw new BadRequestException("Error updating user: " + e.getMessage());
-        }
+    @Async("taskExecutor")
+    public CompletableFuture<List<User>> getUsersByIdsAsync(List<Long> ids) {
+        // Create a list of CompletableFutures, each fetching a user by ID in parallel
+        List<CompletableFuture<User>> futures = ids.stream()
+                .map(id -> CompletableFuture.supplyAsync(() -> getUserById(id))) // Fetch each user in parallel
+                .toList();
+
+        // Combine all CompletableFutures into one CompletableFuture<List<User>>
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> futures.stream()
+                        .map(CompletableFuture::join) // Join all futures to get the results
+                        .toList());
+    }
+
+    public List<User> getUsersByIds(List<Long> ids) {
+        return ids.stream()
+                .map(this::getUserById) // Use the existing getUserById method
+                .toList();
     }
 
     public User getUserById(Long id) {

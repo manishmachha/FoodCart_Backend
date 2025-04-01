@@ -97,4 +97,33 @@ public class UserController {
                 ApiResponse<?> response = ApiResponse.success("User deleted successfully", null);
                 return ResponseEntity.ok(response);
         }
+
+        // Synchronous method to fetch users by IDs
+        @GetMapping("/by-ids")
+        public ResponseEntity<ApiResponse<List<UserDTO>>> getUsersByIds(@RequestBody List<Long> ids) {
+                List<UserDTO> users = userService.getUsersByIds(ids).stream()
+                                .map(UserDTO::new)
+                                .collect(Collectors.toList());
+
+                ApiResponse<List<UserDTO>> response = ApiResponse.success(
+                                String.format("Found %d users", users.size()), users);
+                return ResponseEntity.ok(response);
+        }
+
+        // Asynchronous method to fetch users by IDs
+        @GetMapping("/by-ids-async")
+        public CompletableFuture<ResponseEntity<ApiResponse<List<UserDTO>>>> getUsersByIdsAsync(
+                        @RequestBody List<Long> ids) {
+                return userService.getUsersByIdsAsync(ids)
+                                .thenApply(users -> {
+                                        List<UserDTO> userDTOs = users.stream()
+                                                        .map(UserDTO::new)
+                                                        .collect(Collectors.toList());
+
+                                        ApiResponse<List<UserDTO>> response = ApiResponse.success(
+                                                        String.format("Found %d users asynchronously", userDTOs.size()),
+                                                        userDTOs);
+                                        return ResponseEntity.ok(response);
+                                });
+        }
 }
